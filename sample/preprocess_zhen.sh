@@ -27,7 +27,7 @@ lengRatio=1.5
 # lang id ratio
 threshold=0.4
 
-# cnpmjs.org
+# cnpmjs.or 
 # path to moses decoder: https://github.com/moses-smt/mosesdecoder.git
 if [ ! -d mosesdecoder ];then
   git clone https://github.com/moses-smt/mosesdecoder.git
@@ -47,7 +47,7 @@ fi
 nematus=./nematus
 
 # tokenize
-for prefix in train dev.$SRC-$TRG dev.$TRG-$SRC
+for prefix in train multi dev.$SRC-$TRG dev.$TRG-$SRC
  do
    echo "punctuation src"
    # romanian preprocess
@@ -72,7 +72,7 @@ $mosesdecoder/scripts/training/clean-corpus-n.perl -ratio $lengRatio data/train.
 length_filt_lines=$(cat data/train.tok.clean.$SRC | wc -l )
 echo "[Length filter result]: Input sentences: $raw_lines  Output sentences:  $length_filt_lines !!!"
 
-## train truecaser,判断数据真实性
+## train truecaser,truecase则会学习训练数据，判断句子中的名字、地点等需要大写的内容并将其保留，其余则小写，提升翻译时候的准确性
 $mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$SRC -model model/truecase-model.$SRC
 $mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$TRG -model model/truecase-model.$TRG
 
@@ -84,11 +84,11 @@ for prefix in train
  done
 
 # apply truecaser (dev/test files)
-for prefix in dev.$SRC-$TRG dev.$TRG-$SRC
+for prefix in multi  dev.$SRC-$TRG dev.$TRG-$SRC
  do
   $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$SRC < data/$prefix.tok.$SRC > data/$prefix.tc.$SRC
   $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$TRG < data/$prefix.tok.$TRG > data/$prefix.tc.$TRG
- done
+done
 
 tc_lines=$(cat data/train.tc.$SRC | wc -l )
 echo "[Truecaser result]: Input sentences: $length_filt_lines  Output sentences:   $tc_lines!!!"
@@ -101,17 +101,16 @@ mv data/train.tc.$SRC data/train.tc.tmp.$SRC
 mv data/train.tc.$TRG data/train.tc.tmp.$TRG
 python ./my_tools/data_filter.py --src-lang $SRC --tgt-lang $TRG --in-prefix data/train.tc.tmp --out-prefix data/train.tc --threshold $threshold
 rm data/train.tc.tmp.$SRC && rm data/train.tc.tmp.$TRG
-lang_filt_lines=$(cat data/train.tc.$SRC | wc -l )
-echo "[Lang id filter result]: Input sentences: $tc_lines  Output sentences:   $lang_filt_lines!!!"
+lang_filt_lines=$(cat data/train.tc.$SRC | wc -l )aut sentences:   $lang_filt_lines!!!"
 
 echo "learn bpe"
 ## train BPE, do not joint source and target bpe
-cat data/train.tc.$SRC | $subword_nmt/learn_bpe.py -s $src_bpe_operations > model/$SRC.bpe
-cat data/train.tc.$TRG | $subword_nmt/learn_bpe.py -s $tgt_bpe_operations > model/$TRG.bpe
+cat data/train.tc.$SRC data/multi.tok.$SRC | $subword_nmt/learn_bpe.py -s $src_bpe_operations > model/$SRC.bpe
+cat data/train.tc.$TRG data/multi.tok.$TRG | $subword_nmt/learn_bpe.py -s $tgt_bpe_operations > model/$TRG.bpe
 
 # apply BPE
 echo "apply BPE"
-for prefix in train dev.$SRC-$TRG dev.$TRG-$SRC
+for prefix in train multi dev.$SRC-$TRG dev.$TRG-$SRC
  do
   $subword_nmt/apply_bpe.py -c model/$SRC.bpe < data/$prefix.tc.$SRC > data/$prefix.bpe.$SRC
   $subword_nmt/apply_bpe.py -c model/$TRG.bpe < data/$prefix.tc.$TRG > data/$prefix.bpe.$TRG
@@ -135,7 +134,7 @@ if [ ! -d $result ];then
   mkdir -p $result
 fi
 
-for prefix in train dev test
+for prefix in train multi dev.$SRC-$TRG dev.$TRG-$SRC
   do
     rm data/$prefix.tok.$SRC && rm data/$prefix.tok.$TRG
     rm data/$prefix.tc.$SRC && rm data/$prefix.tc.$TRG
