@@ -41,7 +41,7 @@ fi
 subword_nmt=./subword-nmt/subword_nmt
 
 # path to nematus ( https://www.github.com/rsennrich/nematus.git )
-if [ ! -d nematus-master ];then
+if [ ! -d nematus ];then
   git clone https://github.com/EdinburghNLP/nematus.git
 fi
 nematus=./nematus
