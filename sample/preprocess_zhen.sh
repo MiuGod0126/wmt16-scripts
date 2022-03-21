@@ -49,7 +49,7 @@ nematus=./nematus
 # tokenize
 for prefix in train dev.$SRC-$TRG dev.$TRG-$SRC
  do
-   echo "punc src"
+   echo "punctuation src"
    # romanian preprocess
    cat data/$prefix.$SRC | \
    $mosesdecoder/scripts/tokenizer/normalize-punctuation.perl -l $SRC | \
@@ -57,14 +57,14 @@ for prefix in train dev.$SRC-$TRG dev.$TRG-$SRC
 #   python ../preprocess/remove-diacritics.py | \
    $mosesdecoder/scripts/tokenizer/tokenizer.perl -a -l $SRC > data/$prefix.tok.$SRC
 
-   echo "punc tgt"
+   echo "punctuation tgt"
    cat data/$prefix.$TRG | \
    $mosesdecoder/scripts/tokenizer/normalize-punctuation.perl -l $TRG | \
    $mosesdecoder/scripts/tokenizer/tokenizer.perl -a -l $TRG > data/$prefix.tok.$TRG
 
  done
 
-raw_lines=$(cat data/$prefix.tok.$SRC | wc -l )
+raw_lines=$(cat data/train.tok.$SRC | wc -l )
 echo "raw lines: $raw_lines"
 
 # clean empty and long sentences, and sentences with high source-target ratio (training corpus only)
