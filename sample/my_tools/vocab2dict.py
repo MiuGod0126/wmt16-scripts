@@ -13,6 +13,8 @@ fairseq:
     b 9
     c 8
 '''
+import os
+import sys
 skip_words=['<s>','<pad>','</s>','<unk>']
 
 def read_file(file):

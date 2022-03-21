@@ -1,7 +1,6 @@
-  #!/bin/sh
-
+#!/bin/sh
 # this sample script preprocesses a sample corpus, including tokenization,
-# truecasing, and subword segmentation. 
+# truecasing, and subword segmentation.
 # for application to a different language pair,
 # change source and target prefix, optionally the number of BPE operations,
 # and the file names (currently, data/corpus and data/newsdev2016 are being processed)
@@ -42,10 +41,10 @@ fi
 subword_nmt=./subword-nmt/subword_nmt
 
 # path to nematus ( https://www.github.com/rsennrich/nematus.git )
-if [ ! -d nematus-master ];then
-  git clone https://www.github.com/rsennrich/nematus.git
+if [ ! -d nematus ];then
+  git clone https://github.com/EdinburghNLP/nematus.git
 fi
-nematus=./nematus-master
+nematus=./nematus
 
 # tokenize
 for prefix in train dev.$SRC-$TRG dev.$TRG-$SRC
@@ -71,27 +70,17 @@ echo "raw lines: $raw_lines"
 # clean empty and long sentences, and sentences with high source-target ratio (training corpus only)
 $mosesdecoder/scripts/training/clean-corpus-n.perl -ratio $lengRatio data/train.tok $SRC $TRG data/train.tok.clean $lower $upper
 length_filt_lines=$(cat data/train.tok.clean.$SRC | wc -l )
-echo "length filter lines: $length_filt_lines"
-
-# lang id filter
-if [ ! -e lid.176.bin ]then;
-  wget https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin
-fi
-python ./my_tools/data_filter.py --src-lang $SRC --tgt-lang $TRG --in-prefix data/train.tok.clean --out-prefix data/train.tok.clean.lang --threshold $threshold
-lang_filt_lines=$(cat data/train.tok.clean.lang.$SRC | wc -l )
-echo "lang if filter lines: $lang_filt_lines"
+echo "[Length filter result]: Input sentences: $raw_lines  Output sentences:  $length_filt_lines !!!"
 
 ## train truecaser,判断数据真实性
-#$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$SRC -model model/truecase-model.$SRC
-#$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$TRG -model model/truecase-model.$TRG
-$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.lang.$SRC -model model/truecase-model.$SRC
-$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.lang.$TRG -model model/truecase-model.$TRG
+$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$SRC -model model/truecase-model.$SRC
+$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$TRG -model model/truecase-model.$TRG
 
 # apply truecaser (cleaned training corpus)
 for prefix in train
  do
-  $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$SRC < data/$prefix.tok.clean.lang.$SRC > data/$prefix.tc.$SRC
-  $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$TRG < data/$prefix.tok.clean.lang.$TRG > data/$prefix.tc.$TRG
+  $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$SRC < data/$prefix.tok.clean.$SRC > data/$prefix.tc.$SRC
+  $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$TRG < data/$prefix.tok.clean.$TRG > data/$prefix.tc.$TRG
  done
 
 # apply truecaser (dev/test files)
@@ -100,6 +89,20 @@ for prefix in dev.$SRC-$TRG dev.$TRG-$SRC
   $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$SRC < data/$prefix.tok.$SRC > data/$prefix.tc.$SRC
   $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$TRG < data/$prefix.tok.$TRG > data/$prefix.tc.$TRG
  done
+
+tc_lines=$(cat data/train.tc.$SRC | wc -l )
+echo "[Truecaser result]: Input sentences: $length_filt_lines  Output sentences:   $tc_lines!!!"
+
+# lang id filter
+if [ ! -e lid.176.bin ];then
+  wget https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin
+fi
+mv data/train.tc.$SRC data/train.tc.tmp.$SRC
+mv data/train.tc.$TRG data/train.tc.tmp.$TRG
+python ./my_tools/data_filter.py --src-lang $SRC --tgt-lang $TRG --in-prefix data/train.tc.tmp --out-prefix data/train.tc --threshold $threshold
+rm data/train.tc.tmp.$SRC && rm data/train.tc.tmp.$TRG
+lang_filt_lines=$(cat data/train.tc.$SRC | wc -l )
+echo "[Lang id filter result]: Input sentences: $tc_lines  Output sentences:   $lang_filt_lines!!!"
 
 echo "learn bpe"
 ## train BPE, do not joint source and target bpe
@@ -126,3 +129,20 @@ python my_tools/json2vocab.py $TRG data
 python my_tools/vocab2dict.py $SRC data
 python my_tools/vocab2dict.py $TRG data
 
+# remove tmp file and move result file
+result=data/$SRC${TRG}_bpe
+if [ ! -d $result ];then
+  mkdir -p $result
+fi
+
+for prefix in train dev test
+  do
+    rm data/$prefix.tok.$SRC && rm data/$prefix.tok.$TRG
+    rm data/$prefix.tc.$SRC && rm data/$prefix.tc.$TRG
+    mv data/$prefix.bpe.$SRC $result && mv data/$prefix.bpe.$TRG $result
+  done
+rm data/train.tok.clean.$SRC && rm data/train.tok.clean.$TRG
+mv data/vocab.$SRC $result && mv data/vocab.$TRG $result
+mv data/dict.$SRC.txt $result && mv data/dict.$TRG.txt $result
+
+echo "Done!"

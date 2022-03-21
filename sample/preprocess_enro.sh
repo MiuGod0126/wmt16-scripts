@@ -28,7 +28,7 @@ mosesdecoder=./mosesdecoder
 subword_nmt=./subword-nmt/subword_nmt
 
 # path to nematus ( https://www.github.com/rsennrich/nematus.git )
-nematus=./nematus-master
+nematus=./nematus
 
 # tokenize
 for prefix in corpus newsdev2016 newstest2016
