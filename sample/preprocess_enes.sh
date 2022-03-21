@@ -72,7 +72,7 @@ $mosesdecoder/scripts/training/clean-corpus-n.perl -ratio $lengRatio data/train.
 length_filt_lines=$(cat data/train.tok.clean.$SRC | wc -l )
 echo "[Length filter result]: Input sentences: $raw_lines  Output sentences:  $length_filt_lines !!!"
 
-## train truecaser,判断数据真实性
+## train truecaser,truecase则会学习训练数据，判断句子中的名字、地点等需要大写的内容并将其保留，其余则小写，提升翻译时候的准确性
 $mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$SRC -model model/truecase-model.$SRC
 $mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$TRG -model model/truecase-model.$TRG
 
