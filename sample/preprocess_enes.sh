@@ -64,7 +64,7 @@ for prefix in train dev test
 
  done
 
-raw_lines=$(cat data/$prefix.tok.$SRC | wc -l )
+raw_lines=$(cat data/train.tok.$SRC | wc -l )
 echo "Raw lines: $raw_lines"
 
 # clean empty and long sentences, and sentences with high source-target ratio (training corpus only)
@@ -75,8 +75,6 @@ echo "[Length filter result]: Input sentences: $raw_lines  Output sentences:  $l
 ## train truecaser,判断数据真实性
 $mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$SRC -model model/truecase-model.$SRC
 $mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$TRG -model model/truecase-model.$TRG
-#$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.lang.$SRC -model model/truecase-model.$SRC
-#$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.lang.$TRG -model model/truecase-model.$TRG
 
 
 # apply truecaser (cleaned training corpus)
