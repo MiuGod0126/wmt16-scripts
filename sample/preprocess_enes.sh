@@ -29,13 +29,22 @@ lengRatio=1.5
 threshold=0.4
 
 # cnpmjs.org
-# path to segmentation scripts: https://github.com/rsennrich/subword-nmt.git
-subword_nmt=./subword-nmt/subwomoses decoder: https://github.com/moses-smt/mosesdecoder.git
-#mosesdecoder=./mosesdecoder
-#
-## path to subword rd_nmt
+# path to moses decoder: https://github.com/moses-smt/mosesdecoder.git
+if [ ! -d mosesdecoder ];then
+  git clone https://github.com/moses-smt/mosesdecoder.git
+fi
+mosesdecoder=./mosesdecoder
+
+# path to subword segmentation scripts: https://github.com/rsennrich/subword-nmt.git
+if [ ! -d subword-nmt ];then
+  git clone https://github.com/rsennrich/subword-nmt.git
+fi
+subword_nmt=./subword-nmt/subword_nmt
 
 # path to nematus ( https://www.github.com/rsennrich/nematus.git )
+if [ ! -d nematus-master ];then
+  git clone https://www.github.com/rsennrich/nematus.git
+fi
 nematus=./nematus-master
 
 # tokenize
@@ -56,8 +65,13 @@ for prefix in train dev test
 
  done
 
+raw_lines=$(cat data/$prefix.tok.$SRC | wc -l )
+echo "raw lines: $raw_lines"
+
 # clean empty and long sentences, and sentences with high source-target ratio (training corpus only)
 $mosesdecoder/scripts/training/clean-corpus-n.perl -ratio $lengRatio data/train.tok $SRC $TRG data/train.tok.clean $lower $upper
+length_filt_lines=$(cat data/train.tok.clean.$SRC | wc -l )
+echo "length filter lines: $length_filt_lines"
 
 # lang id filter
 if [ ! -e lid.176.bin ]then;
@@ -65,6 +79,8 @@ if [ ! -e lid.176.bin ]then;
 fi
 
 python ./my_tools/data_filter.py --src-lang $SRC --tgt-lang $TRG --in-prefix data/train.tok.clean --out-prefix data/train.tok.clean.lang --threshold $threshold
+lang_filt_lines=$(cat data/train.tok.clean.lang.$SRC | wc -l )
+echo "lang if filter lines: $lang_filt_lines"
 
 ## train truecaser,判断数据真实性
 #$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$SRC -model model/truecase-model.$SRC
