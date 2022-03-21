@@ -27,7 +27,7 @@ for i in $(seq 0 $(($workers-1)))
 do
   (
   echo "cut shard:${i}"
-  python cut.py $infile.${i} $infile.cut.${i}
+  python my_tools/cut.py $infile.${i} $infile.cut.${i}
   )&
 done
 wait
