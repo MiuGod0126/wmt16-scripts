@@ -34,7 +34,10 @@ bash my_tools/process_xml_folder.sh infolder outfolders
 
 ### 5.合并src和tgt语料
 
+```shell
 python my_tools/merge.py src.txt tgt.txt outfile.txt
+```
+
 
 2022/3/21
 
