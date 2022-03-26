@@ -14,9 +14,11 @@ json->vocab(paddle)->dict(fairseq)
 
 ```shell
 # json转paddle vocab
-python my_tools/json2vocab.py $SRC data
+python my_tools/json2vocab.py $lang $folder
 # paddle vocab转fairseq dict
-python my_tools/vocab2dict.py $SRC data
+python my_tools/vocab2dict.py $lang $folder
+fairseq dict 转  paddle voca
+python my_tools/dict2vocab.py $lang $folder
 ```
 
 ### 3.**lang id过滤**(使用fasttext,需要下载模型文件)
