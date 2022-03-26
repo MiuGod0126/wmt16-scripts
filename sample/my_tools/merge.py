@@ -1,5 +1,5 @@
 import sys
-
+from tqdm import tqdm
 def read_pair_text(file1,file2):
 	res=[]    
 	with open(file1,'r',encoding='utf-8') as f1,open(file2,'r',encoding='utf-8') as f2:
@@ -10,7 +10,9 @@ def read_pair_text(file1,file2):
 
 def write(res,out_file):
 	with open(out_file,'w',encoding='utf-8') as f:
-		f.write(''.join(res))
+		for line in tqdm(res):
+			f.write(line)
+		# f.write(''.join(res))
 	print(f'write to {out_file} success.')
 
 if __name__=="__main__":
