@@ -40,6 +40,14 @@ bash my_tools/process_xml_folder.sh infolder outfolders
 python my_tools/merge.py src.txt tgt.txt outfile.txt
 ```
 
-
 2022/3/21
 
+### 6.流式、整句输入互转
+如：
+```
+大
+大家
+大家晚         <=========> 大家晚上好
+大家晚上
+大家晚上好
+```
