@@ -72,21 +72,21 @@ $mosesdecoder/scripts/training/clean-corpus-n.perl -ratio $lengRatio data/train.
 length_filt_lines=$(cat data/train.tok.clean.$SRC | wc -l )
 echo "[Length filter result]: Input sentences: $raw_lines  Output sentences:  $length_filt_lines !!!"
 
-## train truecaser,truecase则会学习训练数据，判断句子中的名字、地点等需要大写的内容并将其保留，其余则小写，提升翻译时候的准确性
-$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$SRC -model model/truecase-model.$SRC
+## train truecaser,truecase则会学习训练数据，学习词合适的大小写形式（频率最高，而非直接粗暴赚小写），提升翻译时候的准确性
+#$mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$SRC -model model/truecase-model.$SRC
 $mosesdecoder/scripts/recaser/train-truecaser.perl -corpus data/train.tok.clean.$TRG -model model/truecase-model.$TRG
 
 # apply truecaser (cleaned training corpus)
 for prefix in train
  do
-  $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$SRC < data/$prefix.tok.clean.$SRC > data/$prefix.tc.$SRC
+  #$mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$SRC < data/$prefix.tok.clean.$SRC > data/$prefix.tc.$SRC
   $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$TRG < data/$prefix.tok.clean.$TRG > data/$prefix.tc.$TRG
  done
 
 # apply truecaser (dev/test files)
 for prefix in multi  dev.$SRC-$TRG dev.$TRG-$SRC
  do
-  $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$SRC < data/$prefix.tok.$SRC > data/$prefix.tc.$SRC
+  #$mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$SRC < data/$prefix.tok.$SRC > data/$prefix.tc.$SRC
   $mosesdecoder/scripts/recaser/truecase.perl -model model/truecase-model.$TRG < data/$prefix.tok.$TRG > data/$prefix.tc.$TRG
 done
 
