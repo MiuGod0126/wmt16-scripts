@@ -12,8 +12,8 @@ fi
 lines=`cat $infile | wc -l`
 echo "total lines: $lines"
 
-shard_lines=$((lines/4)) # 每块多少行
-tail_lines=$((lines%4)) # 多了多少行
+shard_lines=$((lines/${workers})) # 每块多少行
+tail_lines=$((lines%${workers})) # 多了多少行
 # 分块
 for i in $(seq 0 $(($workers-1)))
 do
